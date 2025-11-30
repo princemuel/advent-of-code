@@ -81,7 +81,3 @@ fn solve(input: &str) {
     // ... grid utilities available in grid module
 }
 ```
-
-## License
-
-MIT
