@@ -6,6 +6,8 @@ enum Direction {
     Left,
 }
 
+const DIAL_SIZE: i32 = 100;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Rotation(Direction, i32);
 impl Rotation {
@@ -39,13 +41,16 @@ impl core::str::FromStr for Rotation {
 }
 
 fn part1(input: impl AsRef<str>) -> i32 {
-    let input = input.as_ref();
-    let rotations: Vec<Rotation> = input.lines().filter_map(|line| line.parse().ok()).collect();
+    let rotations = input
+        .as_ref()
+        .lines()
+        .filter_map(|line| line.parse().ok())
+        .collect::<Vec<Rotation>>();
 
     let (_, count) = rotations.iter().fold((50, 0), |(position, count), rot| {
         let position = match rot.direction() {
-            Direction::Left => (position - rot.distance()).rem_euclid(100),
-            Direction::Right => (position + rot.distance()).rem_euclid(100),
+            Direction::Left => (position - rot.distance()).rem_euclid(DIAL_SIZE),
+            Direction::Right => (position + rot.distance()).rem_euclid(DIAL_SIZE),
         };
 
         let count = if position == 0 { count + 1 } else { count };
@@ -57,8 +62,40 @@ fn part1(input: impl AsRef<str>) -> i32 {
 }
 
 fn part2(input: impl AsRef<str>) -> i32 {
-    let _input = input.as_ref();
-    0
+    let rotations = input
+        .as_ref()
+        .lines()
+        .filter_map(|line| line.parse().ok())
+        .collect::<Vec<Rotation>>();
+
+    let (_, count) = rotations.iter().fold((50, 0), |(position, count), rot| {
+        // Count how many times we cross 0 during this rotation
+        let crossings = count_zero_crossings(position, rot.direction(), rot.distance());
+        let position = match rot.direction() {
+            Direction::Left => (position - rot.distance()).rem_euclid(DIAL_SIZE),
+            Direction::Right => (position + rot.distance()).rem_euclid(DIAL_SIZE),
+        };
+        (position, count + crossings)
+    });
+
+    count
+}
+
+fn count_zero_crossings(start: i32, direction: Direction, steps: i32) -> i32 {
+    // Steps required to reach zero from the current position.
+    let steps_to_zero = match direction {
+        Direction::Right => (DIAL_SIZE - start).rem_euclid(DIAL_SIZE),
+        Direction::Left => start,
+    };
+
+    // Steps remaining after the first time we land on zero.
+    let remaining = steps - steps_to_zero;
+
+    match steps_to_zero {
+        0 => steps / DIAL_SIZE,
+        _ if remaining >= 0 => 1 + (remaining / DIAL_SIZE),
+        _ => 0,
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -89,19 +126,4 @@ fn main() {
 
     let elapsed = start.elapsed();
     println!("Elapsed time: {:.4} seconds", elapsed.as_secs_f64());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    const EXAMPLE: &str = "";
-
-    #[test]
-    fn test_part1() {
-        assert_eq!(part1(EXAMPLE), 0);
-    }
-    #[test]
-    fn test_part2() {
-        assert_eq!(part2(EXAMPLE), 0);
-    }
 }

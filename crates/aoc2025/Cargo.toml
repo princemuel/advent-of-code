@@ -4,3 +4,6 @@ name    = "aoc2025"
 version = "0.1.0"
 
 [dependencies]
+
+[dev-dependencies]
+proptest.workspace = true
