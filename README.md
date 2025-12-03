@@ -1,11 +1,12 @@
-# Advent of Code Solutions
+# Advent of Code
 
-Solutions for [Advent of Code](https://adventofcode.com) implemented in Rust, and organized by year.
+This repository contains solutions for [Advent of Code](https://adventofcode.com), written in Rust and organized per year.
+A custom CLI tool, **`aocctl`**, automates day creation, template selection, input downloading, running, and submissions.
 
 ## Project Structure
 
 ```console
-crates/aoc2025/
+crates/aoc[year]/
 ├── Cargo.toml
 └── src/
     ├── lib.rs          # Shared utilities
@@ -15,69 +16,155 @@ crates/aoc2025/
         └── ...
 ```
 
+Additional generated folders:
+
+```console
+inputs/[year]/    # Downloaded puzzle inputs
+answers/[year]/   # Submission records
+```
+
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [just](https://github.com/casey/just) - `cargo install just`
 - Optional: [cargo-watch](https://github.com/watchexec/cargo-watch) - `cargo install cargo-watch`
+- Advent of Code session cookie stored in any of these:
+  - .env SESSION in .env
+  - env var SESSION on the command line
+  - .session file in the working dir
+  - ~/.config/aoc/.session
 
 ## Quick Start
 
-1. Add your session token to `.env`:
+### 1. Initialize the year
 
-   ```bash
-   TOKEN=your_session_token_here
-   ```
+```bash
+aocctl init 2025
+```
 
-2. Create a new day:
+### 2. Create a new day
 
-   ```bash
-   just new-day 1
-   ```
+```bash
+just new 1
+# or with a specific template:
+aocctl new 1 --template fast
+```
 
-3. Download input and solve:
+### 3. Download input & solve
 
-   ```bash
-   just solve 1
-   ```
+```bash
+just solve 1
+```
 
 ## Available Commands
 
-Run `just` or `just --list` to see all available commands.
-
 ### Build & Test
 
-- `just build` - Build all days
-- `just test` - Run all tests
-- `just release` - Build optimized binaries
+- `just build` — Build workspace
+- `just test` — Run all tests
+- `just release` — Build optimized binaries
 
 ### Run Solutions
 
-- `just run-release 1 puzzle` - Run day 1 with puzzle input
-- `just run-current puzzle` - Run most recent day
+- `just run-day 1 puzzle` — Run day 1 with puzzle input
+- `just run` — Run latest day
+- `just solve 1` — Download, run, and optionally submit
 
 ### Advent of Code Integration
 
-- `just download 1` - Download day 1 input
-- `just solve 1` - Download, run, and submit day 1
-- `just check-status 1` - Check completion status
+- `just input 1` — Download input
+- `just solve 1` — Execute and submit
+- `just open 1` — Open problem in browser
+- `just templates` — List templates
 
 ### Development
 
-- `just watch 1` - Auto-rebuild on changes
-- `just lint` - Run clippy and format check
-- `just fmt` - Format all code
+- `just watch 1` — Auto rebuild
+- `just lint` — Clippy + fmt checks
+- `just fmt` — Format code
+
+## Template System
+
+Templates define the structure of generated day solutions.
+
+| Template  | Description                              |
+| --------- | ---------------------------------------- |
+| minimal   | Simple, small, stdin-based               |
+| buffered  | Efficient file/stdin input via BufReader |
+| streaming | Iterator-based, no full allocation       |
+| fast      | Zero-copy &str parsing                   |
+
+List available templates:
+
+```bash
+aocctl list-templates
+```
+
+Example:
+
+```bash
+aocctl new 5 --template streaming
+```
+
+## Daily Workflow
+
+```bash
+just new 7
+just input 7
+just run-day 7 puzzle
+just solve 7
+```
+
+Dry-run submission:
+
+```bash
+aocctl solve 7 --dry-run
+```
 
 ## Shared Utilities
-
-The `aoc2025` crate provides common utilities in `lib.rs`:
 
 ```rust
 use aoc2025::*;
 
 fn solve(input: &str) {
-    let lines = lines(input);           // Parse as lines
-    let nums = parse_numbers(input);    // Parse as numbers
-    // ... grid utilities available in grid module
+    let lines = lines(input);
+    let nums = parse_numbers(input);
+    // grid helpers, coordinate math, iter utils, etc.
 }
 ```
+
+## Troubleshooting
+
+### Missing session token
+
+```bash
+echo "<your_cookie>" > .session
+```
+
+### Input not downloaded
+
+```bash
+just input <day>
+```
+
+### File doesn’t exist
+
+```bash
+aocctl new <day>
+```
+
+### Performance issues
+
+Use streaming or fast template:
+
+```bash
+aocctl new <day> --template fast
+```
+
+## Contributing
+
+PRs improving templates, utilities, workflow, or documentation are welcome.
+
+## License
+
+MIT
