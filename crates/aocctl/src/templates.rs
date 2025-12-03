@@ -38,12 +38,12 @@ mod tests {
 
     #[test]
     fn t1() {
-        assert_eq!(part_one(&parse(\"\")), 0);
+        assert_eq!(part_one(&parse("")), 0);
     }
 
     #[test]
     fn t2() {
-        assert_eq!(part_two(&parse(\"\")), 0);
+        assert_eq!(part_two(&parse("")), 0);
     }
 }
 "#;
@@ -162,7 +162,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const EX: &str = \"\";
+    const EX: &str = "";
 
     #[test]
     fn test1() {
@@ -212,7 +212,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const EX: &str = \"\";
+    const EX: &str = "";
 
     #[test]
     fn t1() {
