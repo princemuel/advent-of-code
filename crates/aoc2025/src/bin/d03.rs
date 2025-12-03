@@ -1,3 +1,4 @@
+use core::marker::PhantomData;
 use core::str::FromStr;
 
 use aoc2025::read_input;
@@ -15,7 +16,7 @@ fn main() {
     println!("Elapsed time: {:.4} s", start.elapsed().as_secs_f64());
 }
 
-/// A joltage value (1-9)
+/// A joltage value between 1-9 (inclusive)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Joltage(u8);
 
@@ -26,18 +27,16 @@ impl Joltage {
 }
 
 impl TryFrom<char> for Joltage {
-    type Error = ();
+    type Error = ParseError;
 
     fn try_from(c: char) -> Result<Self, Self::Error> {
-        c.to_digit(10).and_then(|d| Joltage::new(d as u8)).ok_or(())
+        c.to_digit(10)
+            .and_then(|digit| Joltage::new(digit as u8))
+            .ok_or(ParseError::InvalidJoltage(c))
     }
 }
 
-impl From<Joltage> for u32 {
-    fn from(value: Joltage) -> Self { value.0 as u32 }
-}
-
-/// A two-digit joltage reading
+/// A two-digit joltage reading formed by selecting two batteries
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct TwoDigitJoltage {
     tens: Joltage,
@@ -50,60 +49,129 @@ impl TwoDigitJoltage {
     fn total(self) -> u32 { self.tens.value() as u32 * 10 + self.ones.value() as u32 }
 }
 
+/// Marker: Battery bank has been parsed but not validated
+struct Parsed;
+
+/// Marker: Battery bank has been validated and is ready for computation
+struct Validated;
+
 /// A bank of batteries
 #[derive(Debug, Clone)]
-struct BatteryBank(Vec<Joltage>);
+struct BatteryBank<State>(Vec<Joltage>, PhantomData<State>);
 
-impl BatteryBank {
+impl BatteryBank<Parsed> {
     fn joltages(&self) -> &[Joltage] { self.0.as_slice() }
 
-    // fn max_joltage(&self) -> Option<TwoDigitJoltage> {
-    //     (0..self.joltages().len().saturating_sub(1))
-    //         .filter_map(|i| {
-    //             let tens = self.joltages()[i];
-    //             let ones = self.joltages()[i + 1..].iter().copied().max()?;
-    //             Some(TwoDigitJoltage::new(tens, ones))
-    //         })
-    //         .max_by_key(|j| j.total())
-    // }
-
-    fn max_joltage(&self) -> Option<TwoDigitJoltage> {
-        if self.joltages().len() < 2 {
-            return None;
+    /// Validate that the bank has sufficient batteries for computation
+    fn validate(self) -> Result<BatteryBank<Validated>, ParseError> {
+        if self.joltages().is_empty() {
+            return Err(ParseError::EmptyBank);
         }
 
-        // Build suffix maximums using scan (right-to-left fold)
-        let suffix_maxes: Vec<Joltage> = self
-            .joltages()
+        if self.joltages().len() < 2 {
+            return Err(ParseError::InsufficientBatteries);
+        }
+
+        Ok(BatteryBank(self.joltages().to_vec(), PhantomData))
+    }
+}
+
+impl BatteryBank<Validated> {
+    fn joltages(&self) -> &[Joltage] { self.0.as_slice() }
+
+    // Find the maximum two-digit joltage possible from this bank
+    /// Algorithm: For each position as tens digit, find the max ones digit
+    /// that can follow it, then return the overall maximum.
+    #[allow(unused)]
+    fn compute_maximum_joltage(&self) -> TwoDigitJoltage {
+        (0..self.joltages().len() - 1)
+            .filter_map(|position| {
+                let tens = self.joltages()[position];
+                let ones = self.joltages()[position + 1..].iter().copied().max()?;
+                Some(TwoDigitJoltage::new(tens, ones))
+            })
+            .max_by_key(|joltage| joltage.total())
+            .expect("Validated bank must have at least one valid pair")
+    }
+
+    /// Optimized O(n) version using precomputed suffix maximums
+    fn max_joltage(&self) -> TwoDigitJoltage {
+        let suffix_maximums = self.build_suffix_maximums();
+
+        self.joltages()
+            .iter()
+            .copied()
+            .zip(suffix_maximums.iter().skip(1).copied())
+            .map(|(tens, ones)| TwoDigitJoltage::new(tens, ones))
+            .max_by_key(|joltage| joltage.total())
+            .expect("Validated bank must have at least one valid pair")
+    }
+
+    /// Build an array where suffix_maximums[i] = max joltage from i to end
+    fn build_suffix_maximums(&self) -> Vec<Joltage> {
+        self.joltages()
             .iter()
             .copied()
             .rev()
-            .scan(None, |max_so_far, joltage| {
-                *max_so_far = Some(max_so_far.map_or(joltage, |m: Joltage| m.max(joltage)));
-                *max_so_far
+            .scan(None, |total, curr| {
+                *total = Some(total.map_or(curr, |prev_max: Joltage| prev_max.max(curr)));
+                *total
             })
             .collect::<Vec<_>>()
             .into_iter()
             .rev()
-            .collect();
+            .collect()
+    }
 
-        // Find the maximum two-digit joltage
-        self.joltages()
-            .iter()
-            .copied()
-            .zip(suffix_maxes.iter().skip(1).copied())
-            .map(|(tens, ones)| TwoDigitJoltage::new(tens, ones))
-            .max_by_key(|j| j.total())
+    fn max_twelve_digit_joltage(&self) -> u128 {
+        const TARGET: usize = 12;
+        let joltages = self.joltages();
+
+        if joltages.len() < TARGET {
+            // Not enough batteries - shouldn't happen with validated banks
+            return 0;
+        }
+
+        let mut result = 0u128;
+        let mut selected = 0;
+        let mut position = 0;
+
+        while selected < TARGET {
+            let remaining_needed = TARGET - selected;
+            let batteries_left = joltages.len() - position;
+            let can_skip = batteries_left - remaining_needed;
+
+            // Find the maximum battery in the range we can consider
+            let max_in_range = joltages[position..=position + can_skip]
+                .iter()
+                .copied()
+                .max()
+                .unwrap();
+
+            // Find the first occurrence of this maximum
+            let max_position = joltages[position..=position + can_skip]
+                .iter()
+                .position(|&j| j == max_in_range)
+                .unwrap();
+
+            // Select this battery
+            position += max_position;
+            result = result * 10 + joltages[position].value() as u128;
+            selected += 1;
+            position += 1;
+        }
+
+        result
     }
 }
 
-impl FromStr for BatteryBank {
-    type Err = ();
+impl FromStr for BatteryBank<Parsed> {
+    type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let joltages: Result<Vec<_>, _> = s.chars().map(Joltage::try_from).collect();
 
-        Ok(BatteryBank(joltages?))
+        Ok(BatteryBank(joltages?, PhantomData))
     }
 }
 
@@ -112,28 +180,42 @@ fn part_one(input: impl AsRef<str>) -> u32 {
     input
         .as_ref()
         .lines()
-        .filter_map(|line| line.parse::<BatteryBank>().ok())
-        .filter_map(|bank| bank.max_joltage())
-        .map(|j| j.total())
+        .filter(|line| !line.trim().is_empty())
+        .filter_map(|line| line.parse::<BatteryBank<Parsed>>().ok()?.validate().ok())
+        .map(|bank| bank.max_joltage().total())
         .sum()
 }
 
 /// Solve part 2.
-fn part_two(input: impl AsRef<str>) -> i64 {
-    let _ = input.as_ref().lines();
-    0
+fn part_two(input: impl AsRef<str>) -> u128 {
+    input
+        .as_ref()
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .filter_map(|line| line.parse::<BatteryBank<Parsed>>().ok()?.validate().ok())
+        .map(|bank| bank.max_twelve_digit_joltage())
+        .sum()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ParseError {
-    EmptyInput,
-    InvalidJolt(u8),
+    InvalidJoltage(char),
+    EmptyBank,
+    InsufficientBatteries,
 }
+
 impl core::fmt::Display for ParseError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::EmptyInput => write!(f, "Empty string"),
-            Self::InvalidJolt(c) => write!(f, "Invalid direction: {}", *c as char),
+            ParseError::InvalidJoltage(ch) => {
+                write!(f, "Invalid joltage character: '{ch}'")
+            }
+            ParseError::EmptyBank => {
+                write!(f, "Battery bank is empty")
+            }
+            ParseError::InsufficientBatteries => {
+                write!(f, "Battery bank needs at least 2 batteries")
+            }
         }
     }
 }
