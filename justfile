@@ -1,162 +1,47 @@
-# Advent of Code
-# ==============================================================================
+# Force bash for more predictable behavior
 set shell := ["bash", "-cu"]
-set dotenv-load := false
 
-# -------------------------
-# CONFIG
-# -------------------------
-
-# Detect latest available AoC year
-year := `ls -d crates/aoc* 2>/dev/null | sed 's|crates/aoc||' | sort -r | head -n 1 || echo ""`
-pkg  := "aoc" + year
-
-# Detect latest day for a specific year
-current_day := `
-    ls crates/{{pkg}}/src/bin/d*.rs 2>/dev/null |
-    sort -r |
-    head -n 1 |
-    sed 's/.*d\([0-9]*\)\.rs/\1/' ||
-    echo ""
-`
-
-default: test lint
-
-# -------------------------
-# BUILD
-# -------------------------
-
+# Build the aocctl binary
 build:
-    cargo build -p {{pkg}}
+    cargo build --package aocctl
 
-build-day day:
-    cargo build -p {{pkg}} --bin d{{day}}
+# Install (optional)
+install:
+    cargo install --path crates/aocctl
 
-release:
-    cargo build -p {{pkg}} --release
+# Create a new day using a selected template
+# Usage: just new 3 minimal
+new day template="minimal":
+    cargo run --package aocctl -- new {{day}} --template {{template}}
 
-release-day day:
-    cargo build -p {{pkg}} --release --bin d{{day}}
+# Run the latest day
+run:
+    cargo run --package aocctl -- current
 
-# -------------------------
-# TEST
-# -------------------------
+# Run a specific day
+run-day day input="puzzle":
+    cargo run --package aocctl -- run {{day}} {{input}}
 
-test:
-    cargo test -p {{pkg}}
+# Solve + optionally submit
+solve day:
+    cargo run --package aocctl -- solve {{day}}
 
-test-day day:
-    cargo test -p {{pkg}} --bin d{{day}}
+# Download input
+input day:
+    cargo run --package aocctl -- input {{day}}
 
-# -------------------------
-# LINT/FORMAT
-# -------------------------
+# Open puzzle page in browser
+open day:
+    cargo run --package aocctl -- open {{day}}
 
-lint: clippy fmt-check
+# Initialize a new year
+init year:
+    cargo run --package aocctl -- init {{year}}
 
-clippy:
-    cargo clippy -p {{pkg}} --all-targets --all-features -- -D warnings
+# List templates
+templates:
+    cargo run --package aocctl -- list-templates
 
-fmt:
-    cargo fmt --all
-
-fmt-check:
-    cargo fmt --all -- --check
-
-check:
-    cargo check -p {{pkg}}
-
-# -------------------------
-# CLEAN
-# -------------------------
-
+# Clean up build artifacts
 clean:
     cargo clean
-
-# -------------------------
-# BENCH
-# -------------------------
-
-bench:
-    cargo bench -p {{pkg}}
-
-bench-day day:
-    cargo bench -p {{pkg}} --bin d{{day}}
-
-# -------------------------
-# RUNNERS
-# -------------------------
-
-run day input:
-    @scripts/run_debug.sh {{pkg}} {{day}} {{input}}
-
-run-release day input:
-    @scripts/run_release.sh {{year}} {{pkg}} {{day}} {{input}}
-
-run-current input:
-    @scripts/run_current.sh {{year}} {{pkg}} {{current_day}} {{input}}
-
-# -------------------------
-# DAY CREATION
-# -------------------------
-
-new-day day:
-    @scripts/new_day.sh {{year}} {{pkg}} {{day}}
-
-init-year year:
-    @scripts/init_year.sh {{year}}
-
-# -------------------------
-# AOC INTEGRATION
-# -------------------------
-
-download day:
-    @scripts/download_input.sh {{year}} {{day}}
-
-check-status day:
-    @scripts/check_status.sh {{year}} {{day}}
-
-submit day part:
-    @scripts/submit.sh {{year}} {{day}} {{part}}
-
-run-submit day input:
-    @scripts/run_submit.sh {{year}} {{day}} {{input}}
-
-# -------------------------
-# DEV HELPERS
-# -------------------------
-
-watch day:
-    cargo watch -x "check -p {{pkg}} --bin d{{day}}" \
-                -x "test -p {{pkg}} --bin d{{day}}"
-
-solve day:
-    @scripts/solve.sh {{year}} {{pkg}} {{day}}
-
-open day:
-    @scripts/open_day.sh {{year}} {{day}}
-
-browse year day:
-    sh xdg-open "https://adventofcode.com/{{year}}/day/{{day}}" \
-      || open "https://adventofcode.com/{{year}}/day/{{day}}" \
-      || echo "Visit: https://adventofcode.com/{{year}}/day/{{day}}"
-
-# -------------------------
-# STATS + SETUP
-# -------------------------
-
-stats:
-    @scripts/stats.sh {{year}} {{pkg}}
-
-setup:
-    @scripts/setup.sh {{year}}
-
-# -------------------------
-# ALIASES
-# -------------------------
-
-alias b := build
-alias t := test
-alias r := run-release
-alias l := lint
-alias c := check
