@@ -12,7 +12,7 @@ use clap::{Parser, Subcommand};
 
 /// Top level command line interface for the `aocctl` tool.
 #[derive(Debug, Clone, Parser)]
-#[command(name = "aocctl", version, about = "Advent of Code workspace helper",long_about = None)]
+#[command(name = "aocctl", version, about = "Advent of Code Cli Tool",long_about = None)]
 pub struct Cli {
     /// The year, for example 2025. Auto detected if omitted.
     #[arg(long, global = true)]
@@ -85,7 +85,7 @@ impl Cli {
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Command {
-    /// Initialize a a new Advent of Code year.
+    /// Initialize a new Advent of Code year.
     Init {
         /// Year to initialize, for example `2025`.
         year: u32,

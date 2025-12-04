@@ -1,5 +1,5 @@
 pub const TEMPLATE_FAST: &str = r#"
-use aoc{YEAR}::read_input;
+use aoc{YEAR}::prelude::*;
 
 /// Fast parser using &str slices, no extra heap allocations.
 fn parse(input: &str) -> Vec<&str> {
@@ -21,38 +21,20 @@ fn part_two(data: &[&str]) -> i64 {
 fn main() {
     use std::time::Instant;
 
-    let input = read_input();
-    let data = parse(&input);
+    let data = read_input();
 
     let start = Instant::now();
-
     println!("Part 1: {}", part_one(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
+
+    let start = Instant::now();
     println!("Part 2: {}", part_two(&data));
-
-    println!("Elapsed: {:.4} s", start.elapsed().as_secs_f64());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn t1() {
-        assert_eq!(part_one(&parse("")), 0);
-    }
-
-    #[test]
-    fn t2() {
-        assert_eq!(part_two(&parse("")), 0);
-    }
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 }
 "#;
 
 pub const TEMPLATE_STREAMING: &str = r#"
-use aoc{YEAR}::read_input;
-use std::env;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use aoc{YEAR}::prelude::*;
 
 /// Read input line-by-line in a streaming fashion.
 ///
@@ -85,32 +67,19 @@ fn part_two<I: Iterator<Item = String>>(lines: I) -> i64 {
 fn main() {
     use std::time::Instant;
 
+    let data = read_input();
+
     let start = Instant::now();
+    println!("Part 1: {}", part_one(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 
-    let p1 = part_one(input_lines());
-    let p2 = part_two(input_lines());
-
-    println!("Part 1: {}", p1);
-    println!("Part 2: {}", p2);
-    println!("Elapsed: {:.4} s", start.elapsed().as_secs_f64());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn example() {
-        let data = vec![String::new()].into_iter();
-        assert_eq!(part_one(data), 0);
-    }
+    let start = Instant::now();
+    println!("Part 2: {}", part_two(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 }
 "#;
 pub const TEMPLATE_BUFFERED: &str = r#"
-use aoc{YEAR}::read_input;
-use std::env;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use aoc{YEAR}::prelude::*;
 
 /// Load input from file (if provided) or from stdin.
 ///
@@ -148,35 +117,20 @@ fn part_two(data: &[String]) -> i64 {
 
 fn main() {
     use std::time::Instant;
-    let input = input();
-    let data = parse(&input);
+
+    let data = read_input();
 
     let start = Instant::now();
-
     println!("Part 1: {}", part_one(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
+
+    let start = Instant::now();
     println!("Part 2: {}", part_two(&data));
-
-    println!("Elapsed: {:.4} s", start.elapsed().as_secs_f64());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    const EX: &str = "";
-
-    #[test]
-    fn test1() {
-        assert_eq!(part_one(&parse(EX)), 0);
-    }
-
-    #[test]
-    fn test2() {
-        assert_eq!(part_two(&parse(EX)), 0);
-    }
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 }
 "#;
 pub const TEMPLATE_MINIMAL: &str = r#"
-use aoc{YEAR}::read_input;
+use aoc{YEAR}::prelude::*;
 
 /// Domain-specific parser.
 fn parse(input: &str) -> Vec<String> {
@@ -207,21 +161,5 @@ fn main() {
     println!("Part 2: {}", part_two(&data));
 
     println!("Elapsed time: {:.4} s", start.elapsed().as_secs_f64());
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    const EX: &str = "";
-
-    #[test]
-    fn t1() {
-        assert_eq!(part_one(&parse(EX)), 0);
-    }
-
-    #[test]
-    fn t2() {
-        assert_eq!(part_two(&parse(EX)), 0);
-    }
 }
 "#;

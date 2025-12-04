@@ -1,3 +1,4 @@
+#:schema https://www.schemastore.org/cargo.json
 [package]
 authors.workspace = true
 edition.workspace = true
@@ -5,7 +6,10 @@ name              = "aocctl"
 version.workspace = true
 
 [dependencies]
-anyhow           = "1"
-clap             = { version = "4", features = ["derive"] }
-reqwest          = { version = "0.12", features = ["blocking", "rustls-tls"] }
+anyhow = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "blocking",
+  "rustls-tls",
+] }
 serde_urlencoded = "0.7"

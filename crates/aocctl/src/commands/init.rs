@@ -22,31 +22,25 @@ pub fn init_year(year: u32) -> Result<()> {
     fs::create_dir_all(Path::new("inputs").join(year.to_string()))?;
     fs::create_dir_all(Path::new("answers").join(year.to_string()))?;
 
-    let cargo_toml = format!(
-        r#"[package]
-name = "{pkg}"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-"#,
-    );
+    let cargo_toml = {
+        let txt = include_str!("../../templates/cargo.txt");
+        txt.replace("{pkg}", &pkg)
+    };
 
     fs::write(crate_dir.join("Cargo.toml"), cargo_toml)?;
 
-    let lib_rs = r#"use std::io::{self, Read};
+    let prelude_rs = {
+        let txt = include_str!("../../templates/prelude.txt");
+        txt.replace("{pkg}", &pkg)
+    };
 
-/// Read all data from standard input into a string.
-///
-/// This is a small helper used by the generated day binaries.
-pub (crate) fn read_input() -> String {
-    let mut s = String::new();
-    io::stdin().read_to_string(&mut s).expect("failed to read stdin");
-    s
-}
-"#;
+    let lib_rs = "pub mod prelude;";
 
     let src_dir = crate_dir.join("src");
+    if !src_dir.join("prelude.rs").exists() {
+        fs::write(src_dir.join("prelude.rs"), &prelude_rs)?;
+    }
+
     if !src_dir.join("lib.rs").exists() {
         fs::write(src_dir.join("lib.rs"), lib_rs)?;
     }
@@ -54,6 +48,8 @@ pub (crate) fn read_input() -> String {
     // Try to add the year crate to the workspace `Cargo.toml` if possible.
     let workspace = Path::new("Cargo.toml");
     if workspace.exists() {
+        // TODO: This section works but fails when members are declared with a glob path
+        // e.g crates/*   or crates/**
         let mut contents = fs::read_to_string(workspace)?;
         let member_line = format!(r#""crates/{pkg}""#);
         if !contents.contains(&member_line) {
