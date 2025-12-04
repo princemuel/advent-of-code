@@ -8,11 +8,12 @@ fn main() {
     let data = read_input();
 
     let start = Instant::now();
-
     println!("Part 1: {}", part_one(&data));
-    println!("Part 2: {}", part_two(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 
-    println!("Elapsed time: {:.4} s", start.elapsed().as_secs_f64());
+    let start = Instant::now();
+    println!("Part 2: {}", part_two(&data));
+    println!("Elapsed time: {:.4} seconds", start.elapsed().as_secs_f64());
 }
 
 /// A joltage value between 1-9 (inclusive)
