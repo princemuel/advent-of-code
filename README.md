@@ -4,7 +4,7 @@ This repository contains solutions for [Advent of Code][aoc], written in Rust an
 A custom CLI tool, **`aocctl`**, automates day creation, template selection, input downloading, running, and submissions.
 
 > [!WARNING]
-> This repository contains reckless amounts of premature optimizations and consequentially may be _occassionally_ (fine, frequently 😉) overly verbose than any reasonable human would willingly write. This is not a cry for help. That's just me exploring how far I can push boundaries with Rust.
+> This repository contains reckless amounts of premature optimizations, (and the not-so optimizations) and consequentially may be _occassionally_ (fine, frequently 😉) overly verbose than any reasonable human would willingly write. This is not a cry for help. That's just me exploring how far I can push boundaries with Rust.
 >
 > I do try to implement the algorithms in a simpler form first, but they are in a private repo, so you're just gonna take my word for it. (like the wizard who said "I totally tested this spell")
 >
