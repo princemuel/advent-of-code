@@ -3,8 +3,12 @@
 This repository contains solutions for [Advent of Code][aoc], written in Rust and organized per year.
 A custom CLI tool, **`aocctl`**, automates day creation, template selection, input downloading, running, and submissions.
 
-> [!IMPORTANT]
-> The code in this repo is full of premature optimizations and consequentially may be _sometimes_ (or most times 😉) verbose. That's just me finding out how far I can push my boundaries with Rust. I do try to implement the algorithms in a simpler form first, but they are in a private repo, so you're just gonna take my word for it.
+> [!WARNING]
+> This repository contains reckless amounts of premature optimizations and consequentially may be _occassionally_ (fine, frequently 😉) overly verbose than any reasonable human would willingly write. This is not a cry for help. That's just me exploring how far I can push boundaries with Rust.
+>
+> I do try to implement the algorithms in a simpler form first, but they are in a private repo, so you're just gonna take my word for it. (like the wizard who said "I totally tested this spell")
+>
+> What you’ll find here is the after version, where I poke at Rust’s type system with a stick, try unnecessary abstractions, add micro-optimizations no one asked for, and then refuse to delete any of it because "it might be useful later." Yep, it's my very own Advent of Fun
 
 [aoc]: https://adventofcode.com
 
