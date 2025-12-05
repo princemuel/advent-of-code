@@ -35,7 +35,16 @@ answers/[year]/   # Submission records
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install)
-- Optional: [just](https://github.com/casey/just) - `cargo install just`
+
+```sh
+ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+- [just](https://github.com/casey/just)
+
+```sh
+cargo install just
+```
 
 ## Quick Start
 
